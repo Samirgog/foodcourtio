@@ -1,0 +1,1 @@
+export { AIAssistantPage as default } from './RestaurantPage';
