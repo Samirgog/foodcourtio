@@ -309,7 +309,7 @@ export const RestaurantPreview: React.FC<PreviewProps> = ({ show, onClose }) => 
             </div>
             <div className="details">
               <h1>{currentRestaurant.name}</h1>
-              <p>Floor {currentRestaurant.location.floor}, {currentRestaurant.location.section}</p>
+              <p>Floor {currentRestaurant?.location?.floor}, {currentRestaurant?.location?.section}</p>
             </div>
           </div>
           <div className="preview-actions">

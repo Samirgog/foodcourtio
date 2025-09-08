@@ -3,6 +3,7 @@ export { AICatalogGenerator } from './AICatalogGenerator';
 export { ContextMenu, useContextMenu } from './ContextMenu';
 export { FoodCourtSelection } from './FoodCourtSelection';
 export { RestaurantPreview } from './RestaurantPreview';
+export { RestaurantSelector } from './RestaurantSelector';
 
 // Animation components
 export * from './animations/AnimationComponents';

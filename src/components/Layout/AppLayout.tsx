@@ -10,7 +10,8 @@ import { ContextMenu } from './ContextMenu';
 
 const LayoutContainer = styled.div<{ sidebarOpen: boolean; sidebarCollapsed: boolean }>`
   display: flex;
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
   background-color: ${({ theme }) => theme.colors.backgroundSecondary};
   transition: ${({ theme }) => theme.transitions.normal};
 `;
@@ -31,7 +32,8 @@ const MainContainer = styled.main<{ sidebarOpen: boolean; sidebarCollapsed: bool
   flex: 1;
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
   margin-left: 0;
   transition: margin-left ${({ theme }) => theme.transitions.normal};
 `;
@@ -40,6 +42,8 @@ const ContentArea = styled.div`
   flex: 1;
   padding: ${({ theme }) => theme.spacing.lg};
   background-color: ${({ theme }) => theme.colors.background};
+  overflow-y: auto;
+  overflow-x: hidden;
   
   @media (max-width: ${({ theme }) => theme.breakpoints.md}) {
     padding: ${({ theme }) => theme.spacing.md};
@@ -103,15 +107,16 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
         isMobile={isMobile}
       >
         <TopToolbar />
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, ease: "easeOut" }}
-        >
-          <ContentArea>
+        <ContentArea>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
+            style={{ height: '100%' }}
+          >
             {children}
-          </ContentArea>
-        </motion.div>
+          </motion.div>
+        </ContentArea>
       </MainContainer>
 
       {/* Mobile overlay */}

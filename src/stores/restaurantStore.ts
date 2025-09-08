@@ -140,11 +140,43 @@ export const useRestaurantStore = create<RestaurantStore>()(
         try {
           await new Promise(resolve => setTimeout(resolve, 1000));
 
-          // Mock data - in real app, this would fetch from API
-          set({
-            restaurants: [mockRestaurant],
+          // Mock data with multiple restaurants for the same owner
+          const mockRestaurants: Restaurant[] = [
+            {
+              ...mockRestaurant,
+              id: 'rest-1',
+              name: 'Bella Vista Pizzeria',
+              description: 'Authentic Italian pizzas with fresh ingredients',
+              isPublished: true,
+            },
+            {
+              ...mockRestaurant,
+              id: 'rest-2', 
+              name: 'Dragon Palace Chinese',
+              description: 'Traditional Chinese cuisine with modern presentation',
+              isPublished: false,
+            },
+            {
+              ...mockRestaurant,
+              id: 'rest-3',
+              name: 'Burger Junction',
+              description: 'Gourmet burgers and crispy fries',
+              isPublished: true,
+            },
+            {
+              ...mockRestaurant,
+              id: 'rest-4',
+              name: 'Sushi Zen',
+              description: 'Fresh sushi and Japanese delicacies',
+              isPublished: false,
+            }
+          ];
+
+          set(state => ({
+            restaurants: mockRestaurants,
+            currentRestaurant: state.currentRestaurant || mockRestaurants[0],
             isLoading: false,
-          });
+          }));
         } catch (error) {
           set({
             isLoading: false,

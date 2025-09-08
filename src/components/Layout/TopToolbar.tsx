@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import { useUIStore, useRestaurantStore, useAuthStore } from '../../stores';
 import { useMediaQuery } from '../../hooks';
 import { Button } from '../../styles/theme';
+import { RestaurantSelector } from '../RestaurantSelector';
 
 const ToolbarContainer = styled.header`
   display: flex;
@@ -255,6 +256,8 @@ export const TopToolbar: React.FC<TopToolbarProps> = ({
       </LeftSection>
 
       <RightSection>
+        <RestaurantSelector />
+        
         {currentRestaurant && (
           <StatusIndicator published={currentRestaurant.isPublished}>
             <div className="dot" />

@@ -13,13 +13,15 @@ const SidebarContainer = styled.aside<{ collapsed: boolean }>`
   flex-direction: column;
   transition: width ${({ theme }) => theme.transitions.normal};
   overflow: hidden;
+  position: relative;
+  flex-shrink: 0;
 `;
 
 const Logo = styled.div<{ collapsed: boolean }>`
   display: flex;
   align-items: center;
   gap: ${({ theme }) => theme.spacing.md};
-  padding: ${({ theme }) => theme.spacing.lg};
+  padding: ${({ theme }) => theme.spacing.md};
   border-bottom: 1px solid ${({ theme }) => theme.colors.border};
   min-height: 80px;
   
