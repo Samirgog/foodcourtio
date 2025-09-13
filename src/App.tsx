@@ -19,6 +19,7 @@ import AIAssistantPage from './pages/AIAssistantPage';
 import SettingsPage from './pages/SettingsPage';
 import BillingPage from './pages/BillingPage';
 import SupportPage from './pages/SupportPage';
+import { EmployeesPage } from './pages/EmployeesPage';
 
 // Create a react-query client
 const queryClient = new QueryClient({
@@ -87,6 +88,11 @@ function App() {
           <Route path="/customers" element={
             <ProtectedRoute>
               <CustomersPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/employees" element={
+            <ProtectedRoute>
+              <EmployeesPage />
             </ProtectedRoute>
           } />
           <Route path="/themes" element={

@@ -25,21 +25,55 @@ const LeftSection = styled.div`
   gap: ${({ theme }) => theme.spacing.md};
 `;
 
-const MenuButton = styled.button`
+const MenuButton = styled.button<{ isOpen?: boolean }>`
   display: none;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border: none;
-  border-radius: ${({ theme }) => theme.borderRadius.md};
-  background-color: transparent;
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
+  background-color: ${({ theme }) => theme.colors.surface};
   color: ${({ theme }) => theme.colors.text};
   cursor: pointer;
   transition: ${({ theme }) => theme.transitions.fast};
+  position: relative;
+  overflow: hidden;
+  box-shadow: ${({ theme }) => theme.shadows.sm};
+  border: 1px solid ${({ theme }) => theme.colors.border};
 
   &:hover {
-    background-color: ${({ theme }) => theme.colors.surfaceHover};
+    background-color: ${({ theme }) => theme.colors.primaryLight};
+    border-color: ${({ theme }) => theme.colors.primary};
+    transform: translateY(-1px);
+    box-shadow: ${({ theme }) => theme.shadows.md};
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+
+  .burger-line {
+    width: 20px;
+    height: 2px;
+    background-color: currentColor;
+    border-radius: 2px;
+    transition: ${({ theme }) => theme.transitions.fast};
+    transform-origin: center;
+  }
+
+  .burger-line:nth-child(1) {
+    transform: ${({ isOpen }) => isOpen ? 'rotate(45deg) translateY(6px)' : 'rotate(0) translateY(-3px)'};
+  }
+
+  .burger-line:nth-child(2) {
+    opacity: ${({ isOpen }) => isOpen ? '0' : '1'};
+    transform: ${({ isOpen }) => isOpen ? 'translateX(20px)' : 'translateX(0)'};
+  }
+
+  .burger-line:nth-child(3) {
+    transform: ${({ isOpen }) => isOpen ? 'rotate(-45deg) translateY(-6px)' : 'rotate(0) translateY(3px)'};
   }
 
   @media (max-width: ${({ theme }) => theme.breakpoints.md}) {
@@ -205,6 +239,7 @@ export const TopToolbar: React.FC<TopToolbarProps> = ({
   breadcrumbs = [{ label: 'Dashboard' }]
 }) => {
   const { 
+    sidebarOpen,
     toggleSidebar, 
     isDarkMode, 
     toggleDarkMode, 
@@ -233,8 +268,10 @@ export const TopToolbar: React.FC<TopToolbarProps> = ({
   return (
     <ToolbarContainer>
       <LeftSection>
-        <MenuButton onClick={toggleSidebar}>
-          ☰
+        <MenuButton onClick={toggleSidebar} isOpen={sidebarOpen}>
+          <div className="burger-line"></div>
+          <div className="burger-line"></div>
+          <div className="burger-line"></div>
         </MenuButton>
         
         <div>

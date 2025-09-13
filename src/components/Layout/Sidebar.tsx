@@ -48,6 +48,7 @@ const Navigation = styled.nav`
   flex: 1;
   padding: ${({ theme }) => theme.spacing.md} 0;
   overflow-y: auto;
+  overflow-x: hidden;
 `;
 
 const NavSection = styled.div<{ collapsed: boolean }>`
@@ -172,26 +173,38 @@ const UserInfo = styled.div<{ collapsed: boolean }>`
   }
 `;
 
-const CollapseButton = styled.button`
+const CollapseButton = styled.button<{ collapsed: boolean }>`
   position: absolute;
-  top: 50%;
-  right: -12px;
-  width: 24px;
-  height: 24px;
+  top: 20px;
+  right: ${({ collapsed }) => collapsed ? '-12px' : '-12px'};
+  width: 32px;
+  height: 32px;
   border-radius: ${({ theme }) => theme.borderRadius.full};
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  background-color: ${({ theme }) => theme.colors.surface};
-  color: ${({ theme }) => theme.colors.textMuted};
+  border: 2px solid ${({ theme }) => theme.colors.primary};
+  background: linear-gradient(135deg, ${({ theme }) => theme.colors.primary}, ${({ theme }) => theme.colors.primaryHover});
+  color: white;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: ${({ theme }) => theme.transitions.fast};
-  z-index: 10;
-
+  z-index: 1000;
+  box-shadow: ${({ theme }) => theme.shadows.lg};
+  
   &:hover {
-    background-color: ${({ theme }) => theme.colors.surfaceHover};
-    color: ${({ theme }) => theme.colors.text};
+    transform: scale(1.1);
+    box-shadow: ${({ theme }) => theme.shadows.xl};
+    border-color: ${({ theme }) => theme.colors.primaryHover};
+  }
+  
+  &:active {
+    transform: scale(0.95);
+  }
+  
+  .icon {
+    font-size: 14px;
+    transition: ${({ theme }) => theme.transitions.fast};
+    transform: ${({ collapsed }) => collapsed ? 'rotate(180deg)' : 'rotate(0deg)'};
   }
 
   @media (max-width: ${({ theme }) => theme.breakpoints.md}) {
@@ -207,6 +220,7 @@ const icons = {
   orders: '📦',
   analytics: '📈',
   customers: '👥',
+  employees: '👨‍💼',
   settings: '⚙️',
   support: '❓',
   billing: '💳',
@@ -223,18 +237,19 @@ const navigationItems = [
       { path: '/dashboard', label: 'Dashboard', icon: icons.dashboard },
       { path: '/restaurant', label: 'Restaurant Setup', icon: icons.restaurant },
       { path: '/catalog', label: 'Menu Catalog', icon: icons.menu },
-      { path: '/orders', label: 'Orders', icon: icons.orders, badge: '12' },
+      { path: '/orders', label: 'Orders', icon: icons.orders },
+      { path: '/employees', label: 'Employees', icon: icons.employees },
     ],
   },
-  {
-    section: 'Business',
-    items: [
-      { path: '/analytics', label: 'Analytics', icon: icons.analytics },
-      { path: '/customers', label: 'Customers', icon: icons.customers },
-      { path: '/themes', label: 'Themes', icon: icons.themes },
-      { path: '/ai-assistant', label: 'AI Assistant', icon: icons.ai },
-    ],
-  },
+  // {
+  //   section: 'Business',
+  //   items: [
+  //     { path: '/analytics', label: 'Analytics', icon: icons.analytics },
+  //     { path: '/customers', label: 'Customers', icon: icons.customers },
+  //     { path: '/themes', label: 'Themes', icon: icons.themes },
+  //     { path: '/ai-assistant', label: 'AI Assistant', icon: icons.ai },
+  //   ],
+  // },
   {
     section: 'Account',
     items: [
@@ -317,8 +332,8 @@ export const Sidebar: React.FC = () => {
       </UserSection>
 
       {!isMobile && (
-        <CollapseButton onClick={toggleSidebarCollapse}>
-          {sidebarCollapsed ? icons.expand : icons.collapse}
+        <CollapseButton onClick={toggleSidebarCollapse} collapsed={sidebarCollapsed}>
+          <span className="icon">◀</span>
         </CollapseButton>
       )}
     </SidebarContainer>

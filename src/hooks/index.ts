@@ -272,3 +272,12 @@ export const useFileUpload = (
 
   return { upload, uploading, progress, error };
 };
+
+// Employee management hooks
+export { 
+  useEmployees, 
+  useGenerateInvite, 
+  useRemoveEmployee, 
+  useEmployeeStatus, 
+  useEmployeeManagement 
+} from './useEmployeeOperations';

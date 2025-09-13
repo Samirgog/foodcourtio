@@ -38,18 +38,23 @@ const WelcomeSection = styled.div`
   }
 `;
 
-const StatsCard = styled(motion.div).attrs(() => ({
-  as: Card
-}))`
+const StatsCard = styled(motion.div)`
   padding: ${({ theme }) => theme.spacing.lg};
   text-align: center;
   background: ${({ theme }) => theme.colors.surface};
   border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
   position: relative;
   overflow: hidden;
+  transition: ${({ theme }) => theme.transitions.normal};
   
   @media (max-width: ${({ theme }) => theme.breakpoints.sm}) {
     padding: ${({ theme }) => theme.spacing.md};
+  }
+  
+  &:hover {
+    border-color: ${({ theme }) => theme.colors.primary};
+    box-shadow: ${({ theme }) => theme.shadows.md};
   }
   
   &::before {
@@ -151,8 +156,11 @@ const StatsGrid = styled.div`
   }
 `;
 
-const QuickActionsCard = styled(Card)`
+const QuickActionsCard = styled.div`
   padding: ${({ theme }) => theme.spacing.lg};
+  background: ${({ theme }) => theme.colors.surface};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
   height: fit-content;
   
   h3 {
@@ -163,9 +171,18 @@ const QuickActionsCard = styled(Card)`
   }
 `;
 
-const OverviewCard = styled(Card)`
+const OverviewCard = styled.div`
   padding: ${({ theme }) => theme.spacing.lg};
+  background: ${({ theme }) => theme.colors.surface};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
   height: fit-content;
+  transition: ${({ theme }) => theme.transitions.normal};
+  
+  &:hover {
+    border-color: ${({ theme }) => theme.colors.primary};
+    box-shadow: ${({ theme }) => theme.shadows.md};
+  }
   
   h3 {
     margin: 0 0 ${({ theme }) => theme.spacing.lg} 0;
@@ -175,9 +192,7 @@ const OverviewCard = styled(Card)`
   }
 `;
 
-const ActionButton = styled(motion.button).attrs(() => ({
-  as: Button
-}))`
+const ActionButton = styled(motion.button)`
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -186,8 +201,10 @@ const ActionButton = styled(motion.button).attrs(() => ({
   height: auto;
   min-height: 100px;
   background: ${({ theme }) => theme.colors.surface};
+  color: ${({ theme }) => theme.colors.text};
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: ${({ theme }) => theme.borderRadius.lg};
+  cursor: pointer;
   transition: all ${({ theme }) => theme.transitions.normal};
   
   &:hover {
@@ -229,8 +246,10 @@ const ActionGrid = styled.div`
 const RestaurantOverview = styled(motion.div)`
   .restaurant-info {
     display: flex;
-    gap: ${({ theme }) => theme.spacing.md};
-    margin-bottom: ${({ theme }) => theme.spacing.lg};
+    gap: ${({ theme }) => theme.spacing.lg};
+    margin-bottom: ${({ theme }) => theme.spacing.xl};
+    padding-bottom: ${({ theme }) => theme.spacing.lg};
+    border-bottom: 1px solid ${({ theme }) => theme.colors.borderLight};
     
     @media (max-width: ${({ theme }) => theme.breakpoints.sm}) {
       flex-direction: column;
@@ -243,6 +262,7 @@ const RestaurantOverview = styled(motion.div)`
       border-radius: ${({ theme }) => theme.borderRadius.lg};
       object-fit: cover;
       flex-shrink: 0;
+      box-shadow: ${({ theme }) => theme.shadows.sm};
       
       @media (max-width: ${({ theme }) => theme.breakpoints.sm}) {
         width: 60px;
@@ -255,23 +275,25 @@ const RestaurantOverview = styled(motion.div)`
       flex: 1;
       
       .name {
-        font-size: ${({ theme }) => theme.fontSizes.lg};
+        font-size: ${({ theme }) => theme.fontSizes.xl};
         font-weight: ${({ theme }) => theme.fontWeights.bold};
         color: ${({ theme }) => theme.colors.text};
-        margin: 0 0 ${({ theme }) => theme.spacing.xs} 0;
+        margin: 0 0 ${({ theme }) => theme.spacing.sm} 0;
       }
       
       .description {
         color: ${({ theme }) => theme.colors.textSecondary};
-        margin: 0 0 ${({ theme }) => theme.spacing.sm} 0;
-        line-height: 1.5;
-        font-size: ${({ theme }) => theme.fontSizes.sm};
+        margin: 0 0 ${({ theme }) => theme.spacing.md} 0;
+        line-height: 1.6;
+        font-size: ${({ theme }) => theme.fontSizes.md};
       }
       
       .status {
         display: inline-flex;
         align-items: center;
-        gap: ${({ theme }) => theme.spacing.xs};
+        gap: ${({ theme }) => theme.spacing.sm};
+        padding: ${({ theme }) => theme.spacing.xs} ${({ theme }) => theme.spacing.md};
+        border-radius: ${({ theme }) => theme.borderRadius.full};
         font-size: ${({ theme }) => theme.fontSizes.sm};
         font-weight: ${({ theme }) => theme.fontWeights.medium};
         
@@ -283,6 +305,7 @@ const RestaurantOverview = styled(motion.div)`
         
         &.published {
           color: ${({ theme }) => theme.colors.success};
+          background: ${({ theme }) => theme.colors.success}15;
           
           .dot {
             background-color: ${({ theme }) => theme.colors.success};
@@ -291,6 +314,7 @@ const RestaurantOverview = styled(motion.div)`
         
         &.draft {
           color: ${({ theme }) => theme.colors.warning};
+          background: ${({ theme }) => theme.colors.warning}15;
           
           .dot {
             background-color: ${({ theme }) => theme.colors.warning};
@@ -302,38 +326,69 @@ const RestaurantOverview = styled(motion.div)`
   
   .stats {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: ${({ theme }) => theme.spacing.lg};
-    
-    @media (max-width: ${({ theme }) => theme.breakpoints.sm}) {
-      grid-template-columns: repeat(3, 1fr);
-      gap: ${({ theme }) => theme.spacing.md};
-    }
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: ${({ theme }) => theme.spacing.md};
     
     .stat {
+      background: ${({ theme }) => theme.colors.backgroundSecondary};
+      border: 1px solid ${({ theme }) => theme.colors.borderLight};
+      border-radius: ${({ theme }) => theme.borderRadius.lg};
+      padding: ${({ theme }) => theme.spacing.lg};
       text-align: center;
+      transition: ${({ theme }) => theme.transitions.fast};
+      position: relative;
+      overflow: hidden;
+      
+      &:hover {
+        border-color: ${({ theme }) => theme.colors.primary};
+        transform: translateY(-2px);
+        box-shadow: ${({ theme }) => theme.shadows.md};
+      }
+      
+      &:before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: ${({ theme }) => theme.colors.primary};
+        opacity: 0;
+        transition: ${({ theme }) => theme.transitions.fast};
+      }
+      
+      &:hover:before {
+        opacity: 1;
+      }
+      
+      .icon {
+        font-size: 24px;
+        margin-bottom: ${({ theme }) => theme.spacing.sm};
+        opacity: 0.8;
+      }
       
       .value {
-        font-size: ${({ theme }) => theme.fontSizes.lg};
+        font-size: ${({ theme }) => theme.fontSizes.xl};
         font-weight: ${({ theme }) => theme.fontWeights.bold};
         color: ${({ theme }) => theme.colors.text};
-        margin: 0;
+        margin: 0 0 ${({ theme }) => theme.spacing.xs} 0;
         
         @media (max-width: ${({ theme }) => theme.breakpoints.sm}) {
-          font-size: ${({ theme }) => theme.fontSizes.md};
+          font-size: ${({ theme }) => theme.fontSizes.lg};
         }
       }
       
       .label {
-        font-size: ${({ theme }) => theme.fontSizes.xs};
-        color: ${({ theme }) => theme.colors.textMuted};
+        font-size: ${({ theme }) => theme.fontSizes.sm};
+        color: ${({ theme }) => theme.colors.textSecondary};
         margin: 0;
+        font-weight: ${({ theme }) => theme.fontWeights.medium};
       }
     }
   }
 `;
 
-const NoRestaurantCard = styled(Card)`
+const NoRestaurantCard = styled.div`
   padding: ${({ theme }) => theme.spacing.xl};
   text-align: center;
   background: linear-gradient(135deg, 
@@ -341,6 +396,7 @@ const NoRestaurantCard = styled(Card)`
     ${({ theme }) => theme.colors.backgroundTertiary} 100%
   );
   border: 2px dashed ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
   
   .icon {
     font-size: 4rem;
@@ -478,8 +534,9 @@ const DashboardPage: React.FC = () => {
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.5, delay: 0.5 }}
             >
-              {currentRestaurant ? (
-                <OverviewCard as={RestaurantOverview}
+            {currentRestaurant ? (
+              <OverviewCard>
+                <RestaurantOverview
                   whileHover={{ y: -2 }}
                   transition={{ duration: 0.2 }}
                 >
@@ -504,52 +561,68 @@ const DashboardPage: React.FC = () => {
                   <div className="stats">
                     <StaggerContainer staggerDelay={0.1}>
                       <StaggerItem>
-                        <div className="stat">
+                        <motion.div 
+                          className="stat"
+                          whileHover={{ scale: 1.02 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          <div className="icon">📋</div>
                           <p className="value">{categories.length}</p>
                           <p className="label">Categories</p>
-                        </div>
+                        </motion.div>
                       </StaggerItem>
                       <StaggerItem>
-                        <div className="stat">
+                        <motion.div 
+                          className="stat"
+                          whileHover={{ scale: 1.02 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          <div className="icon">🍽️</div>
                           <p className="value">{products.length}</p>
                           <p className="label">Products</p>
-                        </div>
+                        </motion.div>
                       </StaggerItem>
                       <StaggerItem>
-                        <div className="stat">
+                        <motion.div 
+                          className="stat"
+                          whileHover={{ scale: 1.02 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          <div className="icon">📅</div>
                           <p className="value">{formatDate(currentRestaurant.updatedAt).split(',')[0]}</p>
                           <p className="label">Last Updated</p>
-                        </div>
+                        </motion.div>
                       </StaggerItem>
                     </StaggerContainer>
                   </div>
-                </OverviewCard>
-              ) : (
-                <OverviewCard as={NoRestaurantCard}>
-                  <motion.div 
-                    className="icon"
-                    animate={{ 
-                      rotate: [0, 10, -10, 0],
-                      scale: [1, 1.1, 1]
-                    }}
-                    transition={{ 
-                      duration: 2,
-                      repeat: Infinity,
-                      repeatDelay: 3
-                    }}
-                  >
-                    🏪
-                  </motion.div>
-                  <h3>No Restaurant Found</h3>
-                  <p>Get started by creating your first restaurant</p>
-                  <motion.div
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <Button>Create Restaurant</Button>
-                  </motion.div>
-                </OverviewCard>
-              )}
+                </RestaurantOverview>
+              </OverviewCard>
+            ) : (
+              <NoRestaurantCard>
+                <motion.div 
+                  className="icon"
+                  animate={{ 
+                    rotate: [0, 10, -10, 0],
+                    scale: [1, 1.1, 1]
+                  }}
+                  transition={{ 
+                    duration: 2,
+                    repeat: Infinity,
+                    repeatDelay: 3
+                  }}
+                >
+                  🏪
+                </motion.div>
+                <h3>No Restaurant Found</h3>
+                <p>Get started by creating your first restaurant</p>
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <ActionButton>Create Restaurant</ActionButton>
+                </motion.div>
+              </NoRestaurantCard>
+            )}
             </motion.div>
           </MainContent>
 

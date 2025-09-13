@@ -162,3 +162,37 @@ export interface PaginatedResponse<T> {
     totalPages: number;
   };
 }
+
+// Employee Management types
+export interface Employee {
+  id: string;
+  restaurantId: string;
+  telegramUserId: string;
+  name: string;
+  username?: string;
+  isActive: boolean;
+  invitedAt: string;
+  joinedAt?: string;
+  lastSeen?: string;
+}
+
+export interface InviteLink {
+  id: string;
+  restaurantId: string;
+  token: string;
+  url: string;
+  expiresAt: string;
+  createdAt: string;
+  usedBy?: string;
+  isUsed: boolean;
+}
+
+export interface EmployeeInviteRequest {
+  restaurantId: string;
+  expiresInHours?: number; // Default 24 hours
+}
+
+export interface EmployeeStatusUpdate {
+  employeeId: string;
+  isActive: boolean;
+}
