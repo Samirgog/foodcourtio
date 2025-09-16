@@ -290,10 +290,11 @@ export const TopToolbar: React.FC<TopToolbarProps> = ({
             ))}
           </Breadcrumbs>
         </div>
+                <RestaurantSelector />
+
       </LeftSection>
 
       <RightSection>
-        <RestaurantSelector />
         
         {currentRestaurant && (
           <StatusIndicator published={currentRestaurant.isPublished}>

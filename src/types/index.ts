@@ -4,18 +4,25 @@ export interface User {
   id: string;
   email: string;
   name: string;
-  role: 'admin' | 'restaurant_owner';
+  role: 'admin' | 'restaurant_owner' | 'superadmin';
   avatar?: string;
+  telegramId?: string;
+  username?: string;
 }
 
 export interface FoodCourt {
   id: string;
   name: string;
   location: string;
-  description: string;
+  description?: string;
   imageUrl?: string;
+  city: string;
+  timezone?: string;
+  isActive?: boolean;
   totalRestaurants: number;
   availableSpots: number;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface PaymentProvider {
@@ -45,6 +52,7 @@ export interface Restaurant {
     spotNumber?: string;
   };
   theme: RestaurantTheme;
+  status?: 'DRAFT' | 'PUBLISHED' | 'SUSPENDED';
   isPublished: boolean;
   createdAt: string;
   updatedAt: string;
@@ -69,11 +77,16 @@ export interface Category {
   description?: string;
   priority: number;
   isActive: boolean;
+  isPublished?: boolean;
   products: Product[];
+  createdAt?: string;
+  updatedAt?: string;
+  productsCount?: number;
 }
 
 export interface ProductVariant {
   id: string;
+  productId?: string;
   name: string;
   priceModifier: number; // Can be positive or negative
   isDefault?: boolean;
@@ -90,7 +103,10 @@ export interface Product {
   volume?: string;
   variants?: ProductVariant[];
   isAvailable: boolean;
+  isPublished?: boolean;
   priority: number;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface AIGeneratorRequest {

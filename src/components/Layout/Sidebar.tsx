@@ -26,8 +26,8 @@ const Logo = styled.div<{ collapsed: boolean }>`
   min-height: 80px;
   
   img {
-    width: 40px;
-    height: 40px;
+    width: 52px;
+    height: 52px;
     border-radius: ${({ theme }) => theme.borderRadius.md};
     flex-shrink: 0;
   }

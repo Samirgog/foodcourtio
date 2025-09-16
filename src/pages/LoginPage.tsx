@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { motion } from 'framer-motion';
 import { useAuthStore, useNotifications } from '../stores';
-import { Button, Input, Label, ErrorText, Card } from '../styles/theme';
+import { Button, Card, Textarea } from '../styles/theme';
 import { FadeInUp, ScaleIn } from '../components/animations/AnimationComponents';
 
 const LoginContainer = styled.div`
@@ -49,42 +49,91 @@ const Logo = styled.div`
   }
 `;
 
-const Form = styled.form`
+const TelegramButton = styled(motion.button)`
   display: flex;
-  flex-direction: column;
-  gap: ${({ theme }) => theme.spacing.lg};
+  align-items: center;
+  justify-content: center;
+  gap: ${({ theme }) => theme.spacing.md};
+  width: 100%;
+  padding: ${({ theme }) => theme.spacing.lg};
+  background-color: #0088cc;
+  color: white;
+  border: none;
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  font-size: ${({ theme }) => theme.fontSizes.lg};
+  font-weight: ${({ theme }) => theme.fontWeights.medium};
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background-color: #0077b3;
+    transform: translateY(-2px);
+  }
+  
+  &:active {
+    transform: translateY(0);
+  }
+  
+  &:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+  
+  .telegram-icon {
+    font-size: 24px;
+  }
 `;
 
-const InputGroup = styled.div`
-  text-align: left;
-`;
-
-const DemoCredentials = styled.div`
-  background-color: ${({ theme }) => theme.colors.backgroundTertiary};
+const Instructions = styled.div`
+  margin-top: ${({ theme }) => theme.spacing.xl};
   padding: ${({ theme }) => theme.spacing.md};
+  background-color: ${({ theme }) => theme.colors.backgroundTertiary};
   border-radius: ${({ theme }) => theme.borderRadius.md};
   border-left: 4px solid ${({ theme }) => theme.colors.info};
-  margin-bottom: ${({ theme }) => theme.spacing.lg};
   
-  h4 {
+  h3 {
     margin: 0 0 ${({ theme }) => theme.spacing.sm} 0;
     color: ${({ theme }) => theme.colors.text};
-    font-size: ${({ theme }) => theme.fontSizes.sm};
-    font-weight: ${({ theme }) => theme.fontWeights.medium};
+    font-size: ${({ theme }) => theme.fontSizes.md};
   }
   
   p {
     margin: 0;
     font-size: ${({ theme }) => theme.fontSizes.sm};
     color: ${({ theme }) => theme.colors.textSecondary};
-    font-family: ${({ theme }) => theme.fonts.mono};
+    line-height: 1.5;
+  }
+`;
+
+const DevTools = styled.div`
+  margin-top: ${({ theme }) => theme.spacing.xl};
+  padding: ${({ theme }) => theme.spacing.md};
+  background-color: #fff3cd;
+  border-radius: ${({ theme }) => theme.borderRadius.md};
+  border-left: 4px solid #ffc107;
+  
+  h3 {
+    margin: 0 0 ${({ theme }) => theme.spacing.sm} 0;
+    color: #856404;
+    font-size: ${({ theme }) => theme.fontSizes.md};
+  }
+  
+  .dev-toggle {
+    background: none;
+    border: none;
+    color: #007bff;
+    cursor: pointer;
+    font-size: ${({ theme }) => theme.fontSizes.sm};
+    text-decoration: underline;
+    margin-bottom: ${({ theme }) => theme.spacing.sm};
   }
 `;
 
 const LoginPage: React.FC = () => {
-  const [email, setEmail] = useState('admin@foodcourt.io');
-  const [password, setPassword] = useState('admin123');
-  const { login, isLoading, error, isAuthenticated } = useAuthStore();
+  const [isRedirecting, setIsRedirecting] = useState(false);
+  const [showDevTools, setShowDevTools] = useState(false);
+  const [initData, setInitData] = useState('');
+  const { loginWithTelegram, isLoading, error, isAuthenticated } = useAuthStore();
   const { showError, showSuccess } = useNotifications();
 
   // Redirect if already authenticated
@@ -92,25 +141,41 @@ const LoginPage: React.FC = () => {
     return <Navigate to="/dashboard" replace />;
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Check for Telegram initData in URL on component mount
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const telegramInitData = urlParams.get('initData');
     
-    if (!email || !password) {
-      showError('Validation Error', 'Please fill in all fields');
+    if (telegramInitData) {
+      // Process Telegram authentication
+      handleTelegramAuth(telegramInitData);
+    }
+  }, []);
+
+  const handleTelegramAuth = async (initData: string) => {
+    if (!initData.trim()) {
+      showError('Validation Error', 'Please provide Telegram initData');
       return;
     }
-
+    
+    setIsRedirecting(true);
+    
     try {
-      await login(email, password);
-      showSuccess('Welcome!', 'Successfully logged in');
+      await loginWithTelegram(initData);
+      showSuccess('Welcome!', 'Successfully logged in with Telegram');
     } catch (error) {
-      showError('Login Failed', 'Please check your credentials and try again');
+      showError('Login Failed', 'Failed to authenticate with Telegram');
+      setIsRedirecting(false);
     }
   };
 
-  const fillDemoCredentials = () => {
-    setEmail('admin@foodcourt.io');
-    setPassword('admin123');
+  const redirectToTelegramBot = () => {
+    // Replace with your actual Telegram bot username
+    const botUsername = 'FoodCourtIOBot'; // You'll need to create this bot
+    const redirectUrl = encodeURIComponent(window.location.origin + window.location.pathname);
+    
+    // This would redirect to your Telegram bot which then redirects back with initData
+    window.location.href = `https://t.me/${botUsername}?start=auth_redirect_${redirectUrl}`;
   };
 
   return (
@@ -134,87 +199,79 @@ const LoginPage: React.FC = () => {
           </FadeInUp>
 
           <FadeInUp delay={0.4}>
-            <DemoCredentials>
-              <h4>Demo Credentials</h4>
-              <p>Email: admin@foodcourt.io</p>
-              <p>Password: admin123</p>
-              <motion.div
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <Button 
-                  type="button" 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={fillDemoCredentials}
-                  style={{ marginTop: '8px' }}
-                >
-                  Fill Demo Credentials
-                </Button>
-              </motion.div>
-            </DemoCredentials>
+            <TelegramButton
+              onClick={redirectToTelegramBot}
+              disabled={isLoading || isRedirecting}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              transition={{ duration: 0.1 }}
+            >
+              <span className="telegram-icon">📱</span>
+              {isRedirecting ? 'Authenticating...' : 'Login with Telegram'}
+            </TelegramButton>
           </FadeInUp>
 
           <FadeInUp delay={0.6}>
-            <Form onSubmit={handleSubmit}>
-              <InputGroup>
-                <Label>Email Address</Label>
-                <motion.div
-                  whileFocus={{ scale: 1.02 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <Input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Enter your email"
-                    disabled={isLoading}
-                  />
-                </motion.div>
-              </InputGroup>
-
-              <InputGroup>
-                <Label>Password</Label>
-                <motion.div
-                  whileFocus={{ scale: 1.02 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <Input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Enter your password"
-                    disabled={isLoading}
-                  />
-                </motion.div>
-                {error && <ErrorText>{error}</ErrorText>}
-              </InputGroup>
-
-              <motion.div
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                transition={{ duration: 0.1 }}
-              >
-                <Button
-                  type="submit"
-                  disabled={isLoading}
-                  fullWidth
-                >
-                  {isLoading ? (
-                    <motion.span
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                      style={{ display: 'inline-block' }}
-                    >
-                      ⟳
-                    </motion.span>
-                  ) : (
-                    'Sign In'
-                  )}
-                </Button>
-              </motion.div>
-            </Form>
+            <Instructions>
+              <h3>How to Login</h3>
+              <p>
+                Click the "Login with Telegram" button to authenticate with our Telegram bot. 
+                You'll be redirected to Telegram, and after authentication, you'll be brought back here.
+              </p>
+            </Instructions>
           </FadeInUp>
+
+          {/* Development Tools - Only visible in development mode */}
+          {import.meta.env.DEV && (
+            <FadeInUp delay={0.8}>
+              <DevTools>
+                <h3>Development Tools</h3>
+                <button 
+                  className="dev-toggle"
+                  onClick={() => setShowDevTools(!showDevTools)}
+                >
+                  {showDevTools ? 'Hide' : 'Show'} Manual Authentication
+                </button>
+                
+                {showDevTools && (
+                  <div style={{ marginTop: '1rem' }}>
+                    <p style={{ fontSize: '0.85rem', color: '#856404' }}>
+                      For development: Paste Telegram initData below to test authentication
+                    </p>
+                    <Textarea
+                      value={initData}
+                      onChange={(e) => setInitData(e.target.value)}
+                      placeholder="Paste Telegram initData here..."
+                      rows={3}
+                      style={{ width: '100%', marginBottom: '0.5rem' }}
+                    />
+                    <Button
+                      onClick={() => handleTelegramAuth(initData)}
+                      disabled={isLoading || isRedirecting}
+                      fullWidth
+                    >
+                      {isRedirecting ? 'Authenticating...' : 'Test Auth with InitData'}
+                    </Button>
+                  </div>
+                )}
+              </DevTools>
+            </FadeInUp>
+          )}
+
+          {error && (
+            <FadeInUp delay={0.9}>
+              <div style={{ 
+                marginTop: '1rem', 
+                padding: '0.75rem', 
+                backgroundColor: '#fee', 
+                border: '1px solid #fcc', 
+                borderRadius: '0.5rem',
+                color: '#c33'
+              }}>
+                {error}
+              </div>
+            </FadeInUp>
+          )}
         </LoginCard>
       </ScaleIn>
     </LoginContainer>

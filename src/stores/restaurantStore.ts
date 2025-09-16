@@ -1,7 +1,15 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { Restaurant, RestaurantFormData, FoodCourt, PaymentProvider } from '../types';
-import { mockRestaurant, mockFoodCourts, mockPaymentProviders } from '../data/mockData';
+import { 
+  RestaurantService, 
+  FoodcourtService, 
+  RestaurantResponseDto, 
+  CreateRestaurantDto,
+  UpdateRestaurantDto,
+  ApiError,
+  TokenManager
+} from '../services';
 import { generateId } from '../utils';
 
 interface RestaurantState {
@@ -11,6 +19,8 @@ interface RestaurantState {
   paymentProviders: PaymentProvider[];
   isLoading: boolean;
   error: string | null;
+  lastFetchTime: number;
+  isInitialized: boolean;
 }
 
 interface RestaurantActions {
@@ -29,12 +39,63 @@ interface RestaurantActions {
   publishRestaurant: (id: string) => Promise<void>;
   unpublishRestaurant: (id: string) => Promise<void>;
   
+  // File uploads
+  uploadLogo: (id: string, file: File) => Promise<void>;
+  uploadBanner: (id: string, file: File) => Promise<void>;
+  
   // Utilities
   clearError: () => void;
   setLoading: (loading: boolean) => void;
 }
 
 type RestaurantStore = RestaurantState & RestaurantActions;
+
+// Transform backend restaurant to frontend format
+const transformRestaurant = (backendRestaurant: RestaurantResponseDto): Restaurant => ({
+  id: backendRestaurant.id,
+  name: backendRestaurant.name,
+  description: backendRestaurant.description,
+  logo: backendRestaurant.logo,
+  banner: backendRestaurant.banner,
+  foodCourtId: backendRestaurant.foodcourtId,
+  ownerId: backendRestaurant.ownerId,
+  paymentProvider: undefined, // Will be populated separately
+  location: backendRestaurant.location,
+  theme: backendRestaurant.theme || {
+    id: 'default',
+    name: 'Default',
+    primaryColor: '#2563eb',
+    secondaryColor: '#1e40af',
+    accentColor: '#3b82f6',
+    backgroundColor: '#ffffff',
+    textColor: '#1f2937',
+    cardStyle: 'minimal',
+    borderRadius: 'medium'
+  },
+  isPublished: backendRestaurant.isPublished,
+  createdAt: backendRestaurant.createdAt,
+  updatedAt: backendRestaurant.updatedAt,
+});
+
+// Mock payment providers for now - these would come from the backend in a real app
+const mockPaymentProviders: PaymentProvider[] = [
+  {
+    id: 'stripe',
+    name: 'Stripe',
+    logo: 'https://stripe.com/img/v3/newsroom/social.png',
+    description: 'Global payment processing with great developer tools',
+    supportedCountries: ['US', 'CA', 'GB', 'AU', 'EU'],
+    fees: { percentage: 2.9, fixedFee: 0.30 }
+  },
+  {
+    id: 'square',
+    name: 'Square',
+    logo: 'https://squareup.com/us/en/press/brand',
+    description: 'Simple payment solutions for small businesses',
+    supportedCountries: ['US', 'CA', 'AU', 'JP'],
+    fees: { percentage: 2.6, fixedFee: 0.10 }
+  },
+];
 
 export const useRestaurantStore = create<RestaurantStore>()(
   persist(
@@ -46,31 +107,32 @@ export const useRestaurantStore = create<RestaurantStore>()(
       paymentProviders: [],
       isLoading: false,
       error: null,
+      lastFetchTime: 0,
+      isInitialized: false,
 
       // Actions
       createRestaurant: async (data: RestaurantFormData) => {
         set({ isLoading: true, error: null });
 
         try {
-          // Simulate API call
-          await new Promise(resolve => setTimeout(resolve, 1500));
-
-          const selectedFoodCourt = get().foodCourts.find(fc => fc.id === data.foodCourtId);
-          const selectedPaymentProvider = get().paymentProviders.find(pp => pp.id === data.paymentProviderId);
-
-          const newRestaurant: Restaurant = {
-            id: generateId(),
+          const createData: CreateRestaurantDto = {
             name: data.name,
             description: data.description,
-            foodCourtId: data.foodCourtId,
-            ownerId: '1', // Mock user ID
-            paymentProvider: selectedPaymentProvider,
+            foodcourtId: data.foodCourtId,
             location: data.location,
-            theme: { id: data.themeId } as any, // Will be populated from themes
-            isPublished: false,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
+            theme: {
+              primaryColor: '#2563eb',
+              secondaryColor: '#1e40af',
+              accentColor: '#3b82f6',
+              backgroundColor: '#ffffff',
+              textColor: '#1f2937',
+              cardStyle: 'minimal',
+              borderRadius: 'medium'
+            }
           };
+
+          const response = await RestaurantService.create(createData);
+          const newRestaurant = transformRestaurant(response);
 
           set(state => ({
             restaurants: [...state.restaurants, newRestaurant],
@@ -80,9 +142,10 @@ export const useRestaurantStore = create<RestaurantStore>()(
 
           return newRestaurant;
         } catch (error) {
+          const errorMessage = error instanceof ApiError ? error.message : 'Failed to create restaurant';
           set({
             isLoading: false,
-            error: error instanceof Error ? error.message : 'Failed to create restaurant',
+            error: errorMessage,
           });
           throw error;
         }
@@ -92,21 +155,31 @@ export const useRestaurantStore = create<RestaurantStore>()(
         set({ isLoading: true, error: null });
 
         try {
-          await new Promise(resolve => setTimeout(resolve, 800));
+          const updateData: UpdateRestaurantDto = {
+            name: updates.name,
+            description: updates.description,
+            foodcourtId: updates.foodCourtId,
+            location: updates.location,
+            theme: updates.theme
+          };
+
+          const response = await RestaurantService.update(id, updateData);
+          const updatedRestaurant = transformRestaurant(response);
 
           set(state => ({
             restaurants: state.restaurants.map(r =>
-              r.id === id ? { ...r, ...updates, updatedAt: new Date().toISOString() } : r
+              r.id === id ? updatedRestaurant : r
             ),
             currentRestaurant: state.currentRestaurant?.id === id
-              ? { ...state.currentRestaurant, ...updates, updatedAt: new Date().toISOString() }
+              ? updatedRestaurant
               : state.currentRestaurant,
             isLoading: false,
           }));
         } catch (error) {
+          const errorMessage = error instanceof ApiError ? error.message : 'Failed to update restaurant';
           set({
             isLoading: false,
-            error: error instanceof Error ? error.message : 'Failed to update restaurant',
+            error: errorMessage,
           });
         }
       },
@@ -115,7 +188,7 @@ export const useRestaurantStore = create<RestaurantStore>()(
         set({ isLoading: true, error: null });
 
         try {
-          await new Promise(resolve => setTimeout(resolve, 500));
+          await RestaurantService.delete(id);
 
           set(state => ({
             restaurants: state.restaurants.filter(r => r.id !== id),
@@ -123,9 +196,10 @@ export const useRestaurantStore = create<RestaurantStore>()(
             isLoading: false,
           }));
         } catch (error) {
+          const errorMessage = error instanceof ApiError ? error.message : 'Failed to delete restaurant';
           set({
             isLoading: false,
-            error: error instanceof Error ? error.message : 'Failed to delete restaurant',
+            error: errorMessage,
           });
         }
       },
@@ -135,90 +209,214 @@ export const useRestaurantStore = create<RestaurantStore>()(
       },
 
       fetchRestaurants: async () => {
+        const state = get();
+        const now = Date.now();
+        const timeSinceLastFetch = now - state.lastFetchTime;
+        const MIN_FETCH_INTERVAL = 5000; // 5 seconds minimum between fetches
+        
+        // Prevent too frequent API calls
+        if (state.isInitialized && timeSinceLastFetch < MIN_FETCH_INTERVAL) {
+          console.log('Skipping fetch due to rate limiting');
+          return;
+        }
+        
+        if (state.isLoading) {
+          console.log('Skipping fetch - already loading');
+          return;
+        }
+
         set({ isLoading: true, error: null });
 
         try {
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          // Check if using mock auth - return mock data
+          const token = TokenManager.getToken();
+          if (token === 'mock-test-token-for-development') {
+            console.log('Mock auth detected, returning mock restaurants');
+            
+            // Simulate API delay
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            const mockRestaurants: Restaurant[] = [
+              {
+                id: 'mock-restaurant-1',
+                name: 'Test Pizza Place',
+                description: 'A test restaurant for development',
+                foodCourtId: 'mock-foodcourt-1',
+                ownerId: 'test-user-1',
+                theme: {
+                  id: 'default',
+                  name: 'Default',
+                  primaryColor: '#2563eb',
+                  secondaryColor: '#1e40af',
+                  accentColor: '#3b82f6',
+                  backgroundColor: '#ffffff',
+                  textColor: '#1f2937',
+                  cardStyle: 'minimal',
+                  borderRadius: 'medium'
+                },
+                isPublished: true,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+              }
+            ];
 
-          // Mock data with multiple restaurants for the same owner
-          const mockRestaurants: Restaurant[] = [
-            {
-              ...mockRestaurant,
-              id: 'rest-1',
-              name: 'Bella Vista Pizzeria',
-              description: 'Authentic Italian pizzas with fresh ingredients',
-              isPublished: true,
-            },
-            {
-              ...mockRestaurant,
-              id: 'rest-2', 
-              name: 'Dragon Palace Chinese',
-              description: 'Traditional Chinese cuisine with modern presentation',
-              isPublished: false,
-            },
-            {
-              ...mockRestaurant,
-              id: 'rest-3',
-              name: 'Burger Junction',
-              description: 'Gourmet burgers and crispy fries',
-              isPublished: true,
-            },
-            {
-              ...mockRestaurant,
-              id: 'rest-4',
-              name: 'Sushi Zen',
-              description: 'Fresh sushi and Japanese delicacies',
-              isPublished: false,
-            }
-          ];
+            set({
+              restaurants: mockRestaurants,
+              currentRestaurant: mockRestaurants[0],
+              isLoading: false,
+              lastFetchTime: now,
+              isInitialized: true,
+            });
+            return;
+          }
 
-          set(state => ({
-            restaurants: mockRestaurants,
-            currentRestaurant: state.currentRestaurant || mockRestaurants[0],
+          const response = await RestaurantService.getAll({ limit: 100 });
+          const restaurants = response.data.map(transformRestaurant);
+
+          set({
+            restaurants,
+            currentRestaurant: restaurants[0] || null,
             isLoading: false,
-          }));
+            lastFetchTime: now,
+            isInitialized: true,
+          });
         } catch (error) {
+          const errorMessage = error instanceof ApiError ? error.message : 'Failed to fetch restaurants';
+          console.error('Failed to fetch restaurants:', error);
           set({
             isLoading: false,
-            error: error instanceof Error ? error.message : 'Failed to fetch restaurants',
+            error: errorMessage,
+            lastFetchTime: now,
           });
         }
       },
 
       fetchFoodCourts: async () => {
         try {
-          await new Promise(resolve => setTimeout(resolve, 500));
+          const foodcourts = await FoodcourtService.getActive();
+          const transformedFoodcourts: FoodCourt[] = foodcourts.map(fc => ({
+            id: fc.id,
+            name: fc.name,
+            location: fc.location,
+            description: fc.description || '',
+            imageUrl: fc.imageUrl,
+            city: fc.city,
+            totalRestaurants: fc.restaurantsCount || 0,
+            availableSpots: Math.max(0, 50 - (fc.restaurantsCount || 0)) // Mock calculation
+          }));
           
           set({
-            foodCourts: mockFoodCourts,
+            foodCourts: transformedFoodcourts,
           });
         } catch (error) {
+          const errorMessage = error instanceof ApiError ? error.message : 'Failed to fetch food courts';
           set({
-            error: error instanceof Error ? error.message : 'Failed to fetch food courts',
+            error: errorMessage,
           });
         }
       },
 
       fetchPaymentProviders: async () => {
         try {
-          await new Promise(resolve => setTimeout(resolve, 300));
-          
+          // For now, use mock data
+          // In the future, this would be an API call
           set({
             paymentProviders: mockPaymentProviders,
           });
         } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : 'Failed to fetch payment providers';
           set({
-            error: error instanceof Error ? error.message : 'Failed to fetch payment providers',
+            error: errorMessage,
           });
         }
       },
 
       publishRestaurant: async (id: string) => {
-        await get().updateRestaurant(id, { isPublished: true });
+        try {
+          const response = await RestaurantService.togglePublished(id, true);
+          const updatedRestaurant = transformRestaurant(response);
+          
+          set(state => ({
+            restaurants: state.restaurants.map(r =>
+              r.id === id ? updatedRestaurant : r
+            ),
+            currentRestaurant: state.currentRestaurant?.id === id
+              ? updatedRestaurant
+              : state.currentRestaurant,
+          }));
+        } catch (error) {
+          const errorMessage = error instanceof ApiError ? error.message : 'Failed to publish restaurant';
+          set({ error: errorMessage });
+        }
       },
 
       unpublishRestaurant: async (id: string) => {
-        await get().updateRestaurant(id, { isPublished: false });
+        try {
+          const response = await RestaurantService.togglePublished(id, false);
+          const updatedRestaurant = transformRestaurant(response);
+          
+          set(state => ({
+            restaurants: state.restaurants.map(r =>
+              r.id === id ? updatedRestaurant : r
+            ),
+            currentRestaurant: state.currentRestaurant?.id === id
+              ? updatedRestaurant
+              : state.currentRestaurant,
+          }));
+        } catch (error) {
+          const errorMessage = error instanceof ApiError ? error.message : 'Failed to unpublish restaurant';
+          set({ error: errorMessage });
+        }
+      },
+
+      uploadLogo: async (id: string, file: File) => {
+        set({ isLoading: true, error: null });
+
+        try {
+          const response = await RestaurantService.uploadLogo(id, file);
+          const updatedRestaurant = transformRestaurant(response);
+          
+          set(state => ({
+            restaurants: state.restaurants.map(r =>
+              r.id === id ? updatedRestaurant : r
+            ),
+            currentRestaurant: state.currentRestaurant?.id === id
+              ? updatedRestaurant
+              : state.currentRestaurant,
+            isLoading: false,
+          }));
+        } catch (error) {
+          const errorMessage = error instanceof ApiError ? error.message : 'Failed to upload logo';
+          set({
+            isLoading: false,
+            error: errorMessage,
+          });
+        }
+      },
+
+      uploadBanner: async (id: string, file: File) => {
+        set({ isLoading: true, error: null });
+
+        try {
+          const response = await RestaurantService.uploadBanner(id, file);
+          const updatedRestaurant = transformRestaurant(response);
+          
+          set(state => ({
+            restaurants: state.restaurants.map(r =>
+              r.id === id ? updatedRestaurant : r
+            ),
+            currentRestaurant: state.currentRestaurant?.id === id
+              ? updatedRestaurant
+              : state.currentRestaurant,
+            isLoading: false,
+          }));
+        } catch (error) {
+          const errorMessage = error instanceof ApiError ? error.message : 'Failed to upload banner';
+          set({
+            isLoading: false,
+            error: errorMessage,
+          });
+        }
       },
 
       clearError: () => {

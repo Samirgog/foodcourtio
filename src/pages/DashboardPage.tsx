@@ -423,16 +423,21 @@ const NoRestaurantCard = styled.div`
 `;
 
 const DashboardPage: React.FC = () => {
-  const { currentRestaurant, fetchRestaurants } = useRestaurantStore();
+  const { currentRestaurant, fetchRestaurants, isLoading: restaurantsLoading } = useRestaurantStore();
   const { categories, products, fetchCatalog } = useCatalogStore();
   const { showSuccess } = useNotifications();
 
+  // Fetch restaurants once on mount
   useEffect(() => {
     fetchRestaurants();
-    if (currentRestaurant) {
+  }, []);
+
+  // Fetch catalog when current restaurant changes
+  useEffect(() => {
+    if (currentRestaurant?.id) {
       fetchCatalog(currentRestaurant.id);
     }
-  }, [currentRestaurant?.id]);
+  }, [currentRestaurant?.id, fetchCatalog]);
 
   const stats = [
     {
